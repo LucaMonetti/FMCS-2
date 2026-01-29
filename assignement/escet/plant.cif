@@ -1,0 +1,16 @@
+controllable event start;
+uncontrollable event finish;
+
+svgfile "plant.svg";
+
+plant M1:
+
+    location idle: marked; initial;
+        edge start goto working;
+
+    location working:
+        edge finish goto idle;
+
+end
+
+svgout id "M1-Frame" attr "fill" value if M1.idle : "#07BEB8" else "#E8871E" end;
