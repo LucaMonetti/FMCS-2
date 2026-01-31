@@ -14,3 +14,83 @@ plant M1:
 end
 
 svgout id "M1-Frame" attr "fill" value if M1.idle : "#07BEB8" else "#E8871E" end;
+
+controllable event BRMoveUp;
+controllable event BRMoveDown;
+controllable event BRMoveLeft;
+controllable event BRMoveRight;
+
+// Blue Rover
+
+plant BlueRover:
+
+    disc int[1..6] x = 5;
+    disc int[1..4] y = 1;
+
+    disc int[0..8] energy = 8;
+
+    location idle: marked; initial;
+        edge BRMoveUp when y <= 3 and energy >= 1 do y := y + 1, energy := energy- 1;
+        edge BRMoveDown when y >= 2 and energy >= 1 do y := y - 1, energy := energy- 1;
+        edge BRMoveRight when x <= 5 and energy >= 1 do x := x + 1, energy := energy- 1;
+        edge BRMoveLeft when x >= 2 and energy >= 1 do x := x - 1, energy := energy- 1;
+
+end
+
+// Update position
+
+svgout id "BR-X-Pos" text value BlueRover.x;
+svgout id "BR-Y-Pos" text value BlueRover.y;
+
+// Update Energy
+
+svgout id "BR-L1" attr "display" value if BlueRover.energy >= 1 : "inline" else "none" end;
+svgout id "BR-L2" attr "display" value if BlueRover.energy >= 2 : "inline" else "none" end;
+svgout id "BR-L3" attr "display" value if BlueRover.energy >= 3 : "inline" else "none" end;
+svgout id "BR-L4" attr "display" value if BlueRover.energy >= 4 : "inline" else "none" end;
+svgout id "BR-L5" attr "display" value if BlueRover.energy >= 5 : "inline" else "none" end;
+svgout id "BR-L6" attr "display" value if BlueRover.energy >= 6 : "inline" else "none" end;
+svgout id "BR-L7" attr "display" value if BlueRover.energy >= 7 : "inline" else "none" end;
+svgout id "BR-L8" attr "display" value if BlueRover.energy = 8 : "inline" else "none" end;
+
+// Update Position
+
+svgout id "B-Rover" attr "transform" value fmt("translate(%d, %d)", 52 + 207 * (BlueRover.x - 1), 135 + 207 * (4 - BlueRover.y));
+
+// Orange Rover
+
+controllable event ORMoveUp;
+controllable event ORMoveDown;
+controllable event ORMoveLeft;
+controllable event ORMoveRight;
+
+plant OrangeRover:
+
+    disc int[1..6] x = 3;
+    disc int[1..4] y = 2;
+
+    disc int[0..8] energy = 8;
+
+    location idle: marked; initial;
+        edge ORMoveUp when y <= 3 and energy >= 1 do y := y + 1, energy := energy- 1;
+        edge ORMoveDown when y >= 2 and energy >= 1 do y := y - 1, energy := energy- 1;
+        edge ORMoveRight when x <= 5 and energy >= 1 do x := x + 1, energy := energy- 1;
+        edge ORMoveLeft when x >= 2 and energy >= 1 do x := x - 1, energy := energy- 1;
+
+end
+
+svgout id "OR-X-Pos" text value OrangeRover.x;
+svgout id "OR-Y-Pos" text value OrangeRover.y;
+
+svgout id "OR-L1" attr "display" value if OrangeRover.energy >= 1 : "inline" else "none" end;
+svgout id "OR-L2" attr "display" value if OrangeRover.energy >= 2 : "inline" else "none" end;
+svgout id "OR-L3" attr "display" value if OrangeRover.energy >= 3 : "inline" else "none" end;
+svgout id "OR-L4" attr "display" value if OrangeRover.energy >= 4 : "inline" else "none" end;
+svgout id "OR-L5" attr "display" value if OrangeRover.energy >= 5 : "inline" else "none" end;
+svgout id "OR-L6" attr "display" value if OrangeRover.energy >= 6 : "inline" else "none" end;
+svgout id "OR-L7" attr "display" value if OrangeRover.energy >= 7 : "inline" else "none" end;
+svgout id "OR-L8" attr "display" value if OrangeRover.energy = 8 : "inline" else "none" end;
+
+// Update Position
+
+svgout id "O-Rover" attr "transform" value fmt("translate(%d, %d)", 92 + 207 * (OrangeRover.x - 1), 144 + 207 * (4 - OrangeRover.y));
