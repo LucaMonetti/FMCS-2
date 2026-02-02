@@ -1,26 +1,96 @@
-controllable event start;
-uncontrollable event finish;
+// Machine 1
+
+controllable event M1_start;
+uncontrollable event M1_finish_success;
+uncontrollable event M1_brokendown;
+
+controllable event M1_repaired;
+
 
 svgfile "plant.svg";
 
 plant M1:
 
     location idle: marked; initial;
-        edge start goto working;
+        edge M1_start goto working;
 
     location working:
-        edge finish goto idle;
+        edge M1_finish_success goto idle;
+        edge M1_brokendown goto broken;
+
+    location broken:
+        edge M1_repaired goto idle;
 
 end
 
-svgout id "M1-Frame" attr "fill" value if M1.idle : "#07BEB8" else "#E8871E" end;
+svgout id "M1-Frame" attr "fill" value if M1.idle : "#07BEB8" elif M1.broken : "#D92020" else "#E8871E" end;
+svgout id "M1-Item" attr "display" value if M1.working : "inline" else "none" end;
+
+// Machine 2
+
+controllable event M2_start;
+uncontrollable event M2_finish_success;
+uncontrollable event M2_brokendown;
+
+controllable event M2_repaired;
+
+plant M2:
+
+    location idle: marked; initial;
+        edge M2_start goto working;
+
+    location working:
+        edge M2_finish_success goto idle;
+        edge M2_brokendown goto broken;
+
+    location broken:
+        edge M2_repaired goto idle;
+
+end
+
+svgout id "M2-Frame" attr "fill" value if M2.idle : "#07BEB8" elif M2.broken : "#D92020" else "#E8871E" end;
+svgout id "M2-Item" attr "display" value if M2.working : "inline" else "none" end;
+
+// Machine 3
+
+controllable event M3_start;
+uncontrollable event M3_finish_success;
+uncontrollable event M3_brokendown;
+
+controllable event M3_repaired;
+
+plant M3:
+
+    location idle: marked; initial;
+        edge M3_start goto working;
+
+    location working:
+        edge M3_finish_success goto idle;
+        edge M3_brokendown goto broken;
+
+    location broken:
+        edge M3_repaired goto idle;
+
+end
+
+svgout id "M3-Frame" attr "fill" value if M3.idle : "#07BEB8" elif M3.broken : "#D92020" else "#E8871E" end;
+svgout id "M3-Item" attr "display" value if M3.working : "inline" else "none" end;
+
+// Blue Rover
 
 controllable event BRMoveUp;
 controllable event BRMoveDown;
 controllable event BRMoveLeft;
 controllable event BRMoveRight;
 
-// Blue Rover
+controllable event BRTake0;
+controllable event BRTake1;
+controllable event BRTake2;
+controllable event BRTake3;
+
+controllable event BRDeliver3;
+
+controllable event BRCharge;
 
 plant BlueRover:
 
@@ -29,12 +99,25 @@ plant BlueRover:
 
     disc int[0..8] energy = 8;
 
+    disc int[0..2] wi0 = 0;
+    disc int[0..2] wi1 = 0;
+    disc int[0..2] wi2 = 0;
+    disc int[0..2] wi3 = 0;
+
     location idle: marked; initial;
         edge BRMoveUp when y <= 3 and energy >= 1 do y := y + 1, energy := energy- 1;
         edge BRMoveDown when y >= 2 and energy >= 1 do y := y - 1, energy := energy- 1;
         edge BRMoveRight when x <= 5 and energy >= 1 do x := x + 1, energy := energy- 1;
         edge BRMoveLeft when x >= 2 and energy >= 1 do x := x - 1, energy := energy- 1;
 
+        edge BRTake0 when x = 1 and y = 4 and wi0 < 2 do wi0 := wi0 + 1;
+        edge BRTake1 when x = 3 and y = 3 and wi1 < 2 do wi1 := wi1 + 1;
+        edge BRTake2 when x = 5 and y = 2 and wi2 < 2 do wi2 := wi2 + 1;
+        edge BRTake3 when x = 1 and y = 1 and wi3 < 2 do wi3 := wi3 + 1;
+
+        edge BRCharge when (x = 4 and y = 1) or (x = 3 and y = 4) do energy := 8;
+
+        edge BRDeliver3 when x= 6 and y = 1 and wi3 >= 1 do wi3 := wi3 - 1;
 end
 
 // Update position
@@ -53,6 +136,16 @@ svgout id "BR-L6" attr "display" value if BlueRover.energy >= 6 : "inline" else 
 svgout id "BR-L7" attr "display" value if BlueRover.energy >= 7 : "inline" else "none" end;
 svgout id "BR-L8" attr "display" value if BlueRover.energy = 8 : "inline" else "none" end;
 
+// Update Carry
+svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
+svgout id "Item-01" attr "display" value if BlueRover.wi0 = 2 : "inline" else "none" end;
+svgout id "Item-10" attr "display" value if BlueRover.wi1 >= 1 : "inline" else "none" end;
+svgout id "Item-11" attr "display" value if BlueRover.wi1 = 2 : "inline" else "none" end;
+svgout id "Item-20" attr "display" value if BlueRover.wi2 >= 1 : "inline" else "none" end;
+svgout id "Item-21" attr "display" value if BlueRover.wi2 = 2 : "inline" else "none" end;
+svgout id "Item-30" attr "display" value if BlueRover.wi3 >= 1 : "inline" else "none" end;
+svgout id "Item-31" attr "display" value if BlueRover.wi3 = 2 : "inline" else "none" end;
+
 // Update Position
 
 svgout id "B-Rover" attr "transform" value fmt("translate(%d, %d)", 52 + 207 * (BlueRover.x - 1), 135 + 207 * (4 - BlueRover.y));
@@ -63,6 +156,10 @@ controllable event ORMoveUp;
 controllable event ORMoveDown;
 controllable event ORMoveLeft;
 controllable event ORMoveRight;
+
+controllable event ORCharge;
+
+controllable event ORRepair;
 
 plant OrangeRover:
 
@@ -76,6 +173,8 @@ plant OrangeRover:
         edge ORMoveDown when y >= 2 and energy >= 1 do y := y - 1, energy := energy- 1;
         edge ORMoveRight when x <= 5 and energy >= 1 do x := x + 1, energy := energy- 1;
         edge ORMoveLeft when x >= 2 and energy >= 1 do x := x - 1, energy := energy- 1;
+
+        edge ORCharge when (x = 4 and y = 1) or (x = 3 and y = 4) do energy := 8;
 
 end
 
@@ -94,3 +193,49 @@ svgout id "OR-L8" attr "display" value if OrangeRover.energy = 8 : "inline" else
 // Update Position
 
 svgout id "O-Rover" attr "transform" value fmt("translate(%d, %d)", 92 + 207 * (OrangeRover.x - 1), 144 + 207 * (4 - OrangeRover.y));
+
+
+// Depot 1
+
+plant D1:
+
+    disc int[0..2] quantity = 0;
+
+    location : marked; initial;
+        edge M1_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge BRTake1 when quantity > 0 do quantity := quantity - 1;
+
+end
+
+svgout id "D1-Item-1" attr "display" value if D1.quantity >= 1 : "inline" else "none" end;
+svgout id "D1-Item-2" attr "display" value if D1.quantity = 2 : "inline" else "none" end;
+
+// Depot 2
+
+plant D2:
+
+    disc int[0..2] quantity = 0;
+
+    location : marked; initial;
+        edge M2_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge BRTake2 when quantity > 0 do quantity := quantity - 1;
+
+end
+
+svgout id "D2-Item-1" attr "display" value if D2.quantity >= 1 : "inline" else "none" end;
+svgout id "D2-Item-2" attr "display" value if D2.quantity = 2 : "inline" else "none" end;
+
+// Depot 3
+
+plant D3:
+
+    disc int[0..2] quantity = 0;
+
+    location : marked; initial;
+        edge M3_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge BRTake3 when quantity > 0 do quantity := quantity - 1;
+
+end
+
+svgout id "D3-Item-1" attr "display" value if D3.quantity >= 1 : "inline" else "none" end;
+svgout id "D3-Item-2" attr "display" value if D3.quantity = 2 : "inline" else "none" end;
