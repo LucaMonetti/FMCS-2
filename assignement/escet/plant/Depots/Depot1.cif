@@ -1,0 +1,15 @@
+import "../events.cif";
+
+plant D1:
+
+    disc int[0..2] quantity = 0;
+    marked quantity = 0;
+
+    location : marked; initial;
+        edge M1_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge BRTake1 when quantity > 0 do quantity := quantity - 1;
+
+end
+
+svgout id "D1-Item-1" attr "display" value if D1.quantity >= 1 : "inline" else "none" end;
+svgout id "D1-Item-2" attr "display" value if D1.quantity = 2 : "inline" else "none" end;

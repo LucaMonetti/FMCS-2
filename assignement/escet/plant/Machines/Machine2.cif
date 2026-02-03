@@ -1,0 +1,18 @@
+import "../events.cif";
+
+plant M2:
+
+    location idle: marked; initial;
+        edge M2_start goto working;
+
+    location working:
+        edge M2_finish_success goto idle;
+        edge M2_brokendown goto broken;
+
+    location broken:
+        edge M2_repaired goto idle;
+
+end
+
+svgout id "M2-Frame" attr "fill" value if M2.idle : "#07BEB8" elif M2.broken : "#D92020" else "#E8871E" end;
+svgout id "M2-Item" attr "display" value if M2.working : "inline" else "none" end;
