@@ -8,10 +8,10 @@ const int M1_x = 3;
 const int M1_y = 3;
 
 const int M2_x = 5;
-const int M2_y = 3;
+const int M2_y = 2;
 
-const int M3_x = 2;
-const int M3_y = 2;
+const int M3_x = 1;
+const int M3_y = 1;
 
 const int Source_x = 2;
 const int Source_y = 4;

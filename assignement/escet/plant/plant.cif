@@ -86,7 +86,11 @@ plant BlueRover:
 
         edge BRCharge when (x = 4 and y = 1) or (x = 3 and y = 4) do energy := 8;
 
-        edge BRDeliver3 when x= 6 and y = 1 and wi3 >= 1 do wi3 := wi3 - 1;
+        edge BRDeliver3 when wi3 >= 1 and x= Target_x and y = Target_y do wi3 := wi3 - 1;
+
+        edge M1_start when wi0 >= 1 and x = M1_x and y = M1_y do wi0 := wi0 - 1;
+        edge M2_start when wi1 >= 1 and x = M2_x and y = M2_y do wi1 := wi1 - 1;
+        edge M3_start when wi2 >= 1 and x = M3_x and y = M3_y do wi2 := wi2 - 1;
 end
 
 // Update position
