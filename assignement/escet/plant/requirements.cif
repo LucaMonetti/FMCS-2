@@ -1,2 +1,48 @@
 import "plant.cif";
+import "events.cif";
 
+// ---------------------------------------------------------------------- //
+//  Requirement 2: The sum of energy of the two batteries is always >= 1  //
+// ---------------------------------------------------------------------- //
+
+requirement R2:
+    location: initial; marked;
+        edge BR_move_up, BR_move_down, BR_move_left, BR_move_right,
+             OR_move_up, OR_move_down, OR_move_left, OR_move_right
+             when BlueRover.energy + OrangeRover.energy - 1 >= 1;
+end
+
+// ------------------------------------------------------------------------------------ //
+//  Requirement 3: The maximum number of workpieces that the blue rover can carry is 4  //
+// ------------------------------------------------------------------------------------ //
+
+requirement R3:
+    location: initial; marked;
+        edge BR_take_0, BR_take_1, BR_take_2, BR_take_3
+            when BlueRover.wi0 + BlueRover.wi1 + BlueRover.wi2 + BlueRover.wi3 < 4;
+end
+
+// ------------------------------------------------------------------------------- //
+//  Requirement 4: Each rover can charge provided its battery is not already full  //
+// ------------------------------------------------------------------------------- //
+
+requirement invariant R4A: BR_charge needs BlueRover.energy < 8;
+requirement invariant R4B: OR_charge needs OrangeRover.energy < 8;
+
+// -------------------------------------- //
+//  Requirement 5: Rovers do not collide  //
+// -------------------------------------- //
+
+requirement R5:
+    location: initial; marked;
+        edge BR_move_up, OR_move_down when (BlueRover.y + 1 != OrangeRover.y and BlueRover.x = OrangeRover.x) or OrangeRover.x != BlueRover.x;
+        edge BR_move_right, OR_move_left when (BlueRover.x + 1 != OrangeRover.x and BlueRover.y = OrangeRover.y) or OrangeRover.y != BlueRover.y;
+        edge BR_move_down, OR_move_up when (BlueRover.y - 1 != OrangeRover.y and BlueRover.x = OrangeRover.x) or OrangeRover.x != BlueRover.x;
+        edge BR_move_left, OR_move_right when (BlueRover.x - 1 != OrangeRover.x and BlueRover.y = OrangeRover.y) or OrangeRover.y != BlueRover.y;
+end
+
+// ----------------------------------------------------------------------- //
+//  Requirement 6: If D3 is full, then D1 can store at most one workpiece  //
+// ----------------------------------------------------------------------- //
+
+requirement invariant R6: M1_start needs D1.quantity < 1 or D3.quantity < 2;
