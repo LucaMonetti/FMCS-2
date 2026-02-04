@@ -1,0 +1,9 @@
+import "constants.cif";
+
+func int[0..10] distance(int[0..7] x1; int[0..5] y1; int[1..6] x2; int[1..4] y2):
+    return abs(x1 - x2) + abs(y1 - y2);
+end
+
+func bool validMove(int[0..7] x; int[0..5] y; int[-1..7] energy):
+    return distance(x, y, Charger1_x, Charger1_y) <= energy or distance(x, y, Charger2_x, Charger2_y) <= energy;
+end

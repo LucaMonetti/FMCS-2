@@ -1,0 +1,177 @@
+controllable M1_start;
+uncontrollable M1_finish_success;
+uncontrollable M1_brokendown;
+controllable M1_repaired;
+controllable M2_start;
+uncontrollable M2_finish_success;
+uncontrollable M2_brokendown;
+controllable M2_repaired;
+controllable M3_start;
+uncontrollable M3_finish_success;
+uncontrollable M3_brokendown;
+controllable M3_repaired;
+controllable BRMoveUp;
+controllable BRMoveDown;
+controllable BRMoveLeft;
+controllable BRMoveRight;
+controllable BRTake0;
+controllable BRTake1;
+controllable BRTake2;
+controllable BRTake3;
+controllable BRDeliver3;
+controllable BRCharge;
+controllable ORMoveUp;
+controllable ORMoveDown;
+controllable ORMoveLeft;
+controllable ORMoveRight;
+controllable ORCharge;
+group $supervisor:
+  const int[3..3] Charger1_x = 3;
+  const int[4..4] Charger1_y = 4;
+  const int[4..4] Charger2_x = 4;
+  const int[1..1] Charger2_y = 1;
+  const int[3..3] M1_x = 3;
+  const int[3..3] M1_y = 3;
+  const int[5..5] M2_x = 5;
+  const int[3..3] M2_y = 3;
+  const int[2..2] M3_x = 2;
+  const int[2..2] M3_y = 2;
+  const int[2..2] Source_x = 2;
+  const int[4..4] Source_y = 4;
+  const int[6..6] Target_x = 6;
+  const int[1..1] Target_y = 1;
+  func int[0..10] distance(int[0..7] x1; int[0..5] y1; int[1..6] x2; int[1..4] y2):
+    return abs(x1 - x2) + abs(y1 - y2);
+  end
+  func bool validMove(int[0..7] x; int[0..5] y; int[-1..7] energy):
+    return distance(x, y, Charger1_x, Charger1_y) <= energy or distance(x, y, Charger2_x, Charger2_y) <= energy;
+  end
+  supervisor automaton R3:
+    location:
+      initial;
+      marked;
+      edge BRTake0, BRTake1, BRTake2, BRTake3 when BlueRover.wi0 + BlueRover.wi1 + BlueRover.wi2 + BlueRover.wi3 <= 4;
+  end
+  plant automaton M1:
+    location idle:
+      initial;
+      marked;
+      edge M1_start goto working;
+    location working:
+      edge M1_finish_success goto idle;
+      edge M1_brokendown goto broken;
+    location broken:
+      edge M1_repaired goto idle;
+  end
+  plant automaton M2:
+    location idle:
+      initial;
+      marked;
+      edge M2_start goto working;
+    location working:
+      edge M2_finish_success goto idle;
+      edge M2_brokendown goto broken;
+    location broken:
+      edge M2_repaired goto idle;
+  end
+  plant automaton M3:
+    location idle:
+      initial;
+      marked;
+      edge M3_start goto working;
+    location working:
+      edge M3_finish_success goto idle;
+      edge M3_brokendown goto broken;
+    location broken:
+      edge M3_repaired goto idle;
+  end
+  plant automaton BlueRover:
+    disc int[1..6] x = 5;
+    disc int[1..4] y = 1;
+    disc int[0..8] energy = 8;
+    disc int[0..2] wi0 = 0;
+    disc int[0..2] wi1 = 0;
+    disc int[0..2] wi2 = 0;
+    disc int[0..2] wi3 = 0;
+    location:
+      initial;
+      marked;
+      edge BRMoveUp when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1) do y := y + 1, energy := energy - 1;
+      edge BRMoveDown when y >= 2 and energy >= 1 and validMove(x, y - 1, energy - 1) do y := y - 1, energy := energy - 1;
+      edge BRMoveRight when x <= 5 and energy >= 1 and validMove(x + 1, y, energy - 1) do x := x + 1, energy := energy - 1;
+      edge BRMoveLeft when x >= 2 and energy >= 1 and validMove(x - 1, y, energy - 1) do x := x - 1, energy := energy - 1;
+      edge BRTake0 when x = 1 and y = 4 and wi0 < 2 do wi0 := wi0 + 1;
+      edge BRTake1 when x = 3 and y = 3 and wi1 < 2 do wi1 := wi1 + 1;
+      edge BRTake2 when x = 5 and y = 2 and wi2 < 2 do wi2 := wi2 + 1;
+      edge BRTake3 when x = 1 and y = 1 and wi3 < 2 do wi3 := wi3 + 1;
+      edge BRCharge when x = 4 and y = 1 or x = 3 and y = 4 do energy := 8;
+      edge BRDeliver3 when x = 6 and y = 1 and wi3 >= 1 do wi3 := wi3 - 1;
+  end
+  plant automaton OrangeRover:
+    disc int[1..6] x = 3;
+    disc int[1..4] y = 2;
+    disc int[0..8] energy = 8;
+    location:
+      initial;
+      marked;
+      edge ORMoveUp when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1) do y := y + 1, energy := energy - 1;
+      edge ORMoveDown when y >= 2 and energy >= 1 and validMove(x, y - 1, energy - 1) do y := y - 1, energy := energy - 1;
+      edge ORMoveRight when x <= 5 and energy >= 1 and validMove(x + 1, y, energy - 1) do x := x + 1, energy := energy - 1;
+      edge ORMoveLeft when x >= 2 and energy >= 1 and validMove(x - 1, y, energy - 1) do x := x - 1, energy := energy - 1;
+      edge ORCharge when x = 4 and y = 1 or x = 3 and y = 4 do energy := 8;
+      edge M1_repaired when x = 3 and y = 3;
+      edge M2_repaired when x = 5 and y = 2;
+      edge M3_repaired when x = 1 and y = 1;
+  end
+  plant automaton D1:
+    disc int[0..2] quantity = 0;
+    location:
+      initial;
+      marked;
+      edge M1_finish_success when quantity < 2 do quantity := quantity + 1;
+      edge BRTake1 when quantity > 0 do quantity := quantity - 1;
+  end
+  plant automaton D2:
+    disc int[0..2] quantity = 0;
+    location:
+      initial;
+      marked;
+      edge M2_finish_success when quantity < 2 do quantity := quantity + 1;
+      edge BRTake2 when quantity > 0 do quantity := quantity - 1;
+  end
+  plant automaton D3:
+    disc int[0..2] quantity = 0;
+    location:
+      initial;
+      marked;
+      edge M3_finish_success when quantity < 2 do quantity := quantity + 1;
+      edge BRTake3 when quantity > 0 do quantity := quantity - 1;
+  end
+  supervisor automaton sup:
+    alphabet M1_start, M1_repaired, M2_start, M2_repaired, M3_start, M3_repaired, BRMoveUp, BRMoveDown, BRMoveRight, BRMoveLeft, BRTake0, BRTake1, BRTake2, BRTake3, BRCharge, BRDeliver3, ORMoveUp, ORMoveDown, ORMoveRight, ORMoveLeft, ORCharge;
+    location:
+      initial;
+      marked;
+      edge BRCharge when true;
+      edge BRDeliver3 when true;
+      edge BRMoveDown when true;
+      edge BRMoveLeft when true;
+      edge BRMoveRight when true;
+      edge BRMoveUp when true;
+      edge BRTake0 when true;
+      edge BRTake1 when true;
+      edge BRTake2 when true;
+      edge BRTake3 when true;
+      edge M1_repaired when true;
+      edge M1_start when (not M2.idle or (not M3.idle or OrangeRover.x != 4) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0))) and (not M2.idle or not M3.idle or (OrangeRover.x != 4 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 4 or (OrangeRover.y != 3 or OrangeRover.energy != 1))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 4 or OrangeRover.energy != 0))) and (not M2.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 0))))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 2))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and (not M2.idle or (not M3.idle or OrangeRover.x != 2) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0)))) and ((not M2.idle or (not M3.idle or OrangeRover.x != 2) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and ((not M2.idle or (not M3.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0))) and (not M2.idle or (not M3.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 2)))))) and ((not M2.idle or (not M3.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 1))) and (not M2.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 1 or OrangeRover.energy != 1))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and (not M2.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or OrangeRover.energy != 2))))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or not(OrangeRover.energy = 1 or OrangeRover.energy = 3)))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 4 or OrangeRover.energy != 0))) and (not M2.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 4 or OrangeRover.energy != 1)))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or OrangeRover.energy != 2))) and (not M2.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or not(OrangeRover.energy = 1 or OrangeRover.energy = 3)))))))) and ((not M2.idle or (not M3.idle or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and (not M2.idle or (not M3.idle or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 2))) and ((not M2.idle or (not M3.idle or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and ((not M2.idle or (not M3.idle or OrangeRover.x != 5) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0))) and (not M2.idle or (not M3.idle or OrangeRover.x != 5) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 1))))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and (not M2.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 2)))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 1))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 3 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and (not M2.idle or not M3.idle or (OrangeRover.x != 3 or (OrangeRover.y != 2 or OrangeRover.energy != 1)))))) and ((not M2.idle or not M3.idle or (OrangeRover.x != 3 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and (not M2.idle or (not M3.broken or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and ((not M2.idle or (not M3.broken or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 2))) and ((not M2.idle or (not M3.broken or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and (not M2.idle or (not M3.working or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))))) and ((not M2.idle or (not M3.working or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 2))) and ((not M2.idle or (not M3.working or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and (not M2.broken or M3.working or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 0)))) and ((not M2.broken or M3.working or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and ((not M2.working or M3.working or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and (not M2.working or M3.working or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 1))))))));
+      edge M2_repaired when true;
+      edge M2_start when (not M1.idle or (not M3.idle or OrangeRover.x != 4) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0))) and (not M1.idle or not M3.idle or (OrangeRover.x != 4 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 4 or (OrangeRover.y != 3 or OrangeRover.energy != 1))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 4 or OrangeRover.energy != 0))) and (not M1.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 0))))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 2))) and (not M1.idle or not M3.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and ((not M1.idle or (not M3.idle or OrangeRover.x != 2) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and ((not M1.idle or (not M3.idle or OrangeRover.x != 2) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and (not M1.idle or (not M3.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0)))))) and ((not M1.idle or (not M3.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 2))) and (not M1.idle or (not M3.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 1))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 1 or OrangeRover.energy != 1))) and (not M1.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or OrangeRover.energy != 0))))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or OrangeRover.energy != 2))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or not(OrangeRover.energy = 1 or OrangeRover.energy = 3)))) and (not M1.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 4 or OrangeRover.energy != 0)))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 4 or OrangeRover.energy != 1))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and (not M1.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or OrangeRover.energy != 2))))))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or not(OrangeRover.energy = 1 or OrangeRover.energy = 3)))) and (not M1.idle or (not M3.idle or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and ((not M1.idle or (not M3.idle or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 2))) and ((not M1.idle or (not M3.idle or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and (not M1.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 4 or OrangeRover.energy != 0))))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 4 or OrangeRover.energy != 1))) and (not M1.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 2))) and (not M1.idle or not M3.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 1)))))) and ((not M1.idle or not M3.idle or (OrangeRover.x != 3 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and (not M1.idle or not M3.idle or (OrangeRover.x != 3 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and ((not M1.idle or (not M3.idle or OrangeRover.x != 3) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and ((not M1.idle or (not M3.broken or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and (not M1.idle or (not M3.broken or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 2))))) and ((not M1.idle or (not M3.broken or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and ((not M1.idle or (not M3.working or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and (not M1.idle or (not M3.working or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 2)))) and ((not M1.idle or (not M3.working or OrangeRover.x != 1) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and ((not M1.broken or (M3.working or OrangeRover.x != 3) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and (not M1.working or (M3.working or OrangeRover.x != 3) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))))))));
+      edge M3_repaired when true;
+      edge M3_start when (not M1.idle or (not M2.idle or OrangeRover.x != 4) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0))) and (not M1.idle or not M2.idle or (OrangeRover.x != 4 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 4 or (OrangeRover.y != 3 or OrangeRover.energy != 1))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 2 or (OrangeRover.y != 4 or OrangeRover.energy != 0))) and (not M1.idle or not M2.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 0))))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 2))) and (not M1.idle or not M2.idle or (OrangeRover.x != 2 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and ((not M1.idle or (not M2.idle or OrangeRover.x != 2) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and ((not M1.idle or (not M2.idle or OrangeRover.x != 2) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 1))) and (not M1.idle or (not M2.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0)))))) and ((not M1.idle or (not M2.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 2))) and (not M1.idle or (not M2.idle or OrangeRover.x != 6) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 1))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 6 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 6 or (OrangeRover.y != 1 or OrangeRover.energy != 1))) and (not M1.idle or not M2.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or OrangeRover.energy != 0))))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or OrangeRover.energy != 2))) and (not M1.idle or not M2.idle or (OrangeRover.x != 6 or (OrangeRover.y != 3 or not(OrangeRover.energy = 1 or OrangeRover.energy = 3)))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 4 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 4 or OrangeRover.energy != 1))) and (not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or OrangeRover.energy != 0))))))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or OrangeRover.energy != 2))) and (not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 2 or not(OrangeRover.energy = 1 or OrangeRover.energy = 3)))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 3 or OrangeRover.energy != 2))) and (not M1.idle or not M2.idle or (OrangeRover.x != 1 or (OrangeRover.y != 3 or OrangeRover.energy != 1))))) and ((not M1.idle or (not M2.idle or OrangeRover.x != 5) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 0))) and (not M1.idle or (not M2.idle or OrangeRover.x != 5) or (OrangeRover.y = 1 or (OrangeRover.y = 3 or OrangeRover.energy != 1))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 5 or (OrangeRover.y != 1 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 0))) and (not M1.idle or not M2.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 2)))))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 5 or (OrangeRover.y != 3 or OrangeRover.energy != 1))) and (not M1.idle or not M2.idle or (OrangeRover.x != 3 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.idle or (OrangeRover.x != 3 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and ((not M1.idle or (not M2.idle or OrangeRover.x != 3) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and (not M1.idle or not M2.broken or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 0))))) and ((not M1.idle or not M2.broken or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and (not M1.idle or not M2.working or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 0))) and ((not M1.idle or not M2.working or (OrangeRover.x != 5 or (OrangeRover.y != 2 or OrangeRover.energy != 1))) and ((not M1.broken or (M2.working or OrangeRover.x != 3) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))) and (not M1.working or (M2.working or OrangeRover.x != 3) or (OrangeRover.y = 2 or (OrangeRover.y = 4 or OrangeRover.energy != 0))))))));
+      edge ORCharge when true;
+      edge ORMoveDown when true;
+      edge ORMoveLeft when true;
+      edge ORMoveRight when true;
+      edge ORMoveUp when true;
+  end
+end

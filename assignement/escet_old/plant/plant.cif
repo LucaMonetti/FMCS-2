@@ -1,0 +1,18 @@
+svgfile "../plant.svg";
+
+import "../helpers/constants.cif";
+import "../helpers/functions.cif";
+
+import "events.cif";
+
+import "Machines/Machine1.cif";
+import "Machines/Machine2.cif";
+import "Machines/Machine3.cif";
+
+import "Depots/Depot1.cif";
+import "Depots/Depot2.cif";
+import "Depots/Depot3.cif";
+
+import "Rovers/BlueRover.cif";
+import "Rovers/OrangeRover.cif";
+

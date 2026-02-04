@@ -1,11 +1,73 @@
-import "../constants.cif";
-import "../functions.cif";
-import "events.cif";
+// Events
 
-// Svg file
-svgfile "plant.svg";
+controllable event M1_start;
+uncontrollable event M1_finish_success;
+uncontrollable event M1_brokendown;
+
+controllable event M1_repaired;
+controllable event M2_start;
+uncontrollable event M2_finish_success;
+uncontrollable event M2_brokendown;
+
+controllable event M2_repaired;
+controllable event M3_start;
+uncontrollable event M3_finish_success;
+uncontrollable event M3_brokendown;
+
+controllable event M3_repaired;
+controllable event BRMoveUp;
+controllable event BRMoveDown;
+controllable event BRMoveLeft;
+controllable event BRMoveRight;
+
+controllable event BRTake0;
+controllable event BRTake1;
+controllable event BRTake2;
+controllable event BRTake3;
+
+controllable event BRDeliver3;
+
+controllable event BRCharge;
+controllable event ORMoveUp;
+controllable event ORMoveDown;
+controllable event ORMoveLeft;
+controllable event ORMoveRight;
+controllable event ORCharge;
+
+// Helpers
+
+func int[0..10] distance(int[0..7] x1; int[0..5] y1; int[1..6] x2; int[1..4] y2):
+    return abs(x1 - x2) + abs(y1 - y2);
+end
+
+func bool validMove(int[0..7] x; int[0..5] y; int[-1..7] energy):
+    return distance(x, y, Charger1_x, Charger1_y) <= energy or distance(x, y, Charger2_x, Charger2_y) <= energy;
+end
+
+const int Charger1_x = 3;
+const int Charger1_y = 4;
+
+const int Charger2_x = 4;
+const int Charger2_y = 1;
+
+const int M1_x = 3;
+const int M1_y = 3;
+
+const int M2_x = 5;
+const int M2_y = 3;
+
+const int M3_x = 2;
+const int M3_y = 2;
+
+const int Source_x = 2;
+const int Source_y = 4;
+
+const int Target_x = 6;
+const int Target_y = 1;
 
 // Machine 1
+
+svgfile "../plant.svg";
 
 plant M1:
 
@@ -25,6 +87,7 @@ svgout id "M1-Frame" attr "fill" value if M1.idle : "#07BEB8" elif M1.broken : "
 svgout id "M1-Item" attr "display" value if M1.working : "inline" else "none" end;
 
 // Machine 2
+
 plant M2:
 
     location idle: marked; initial;
@@ -43,6 +106,7 @@ svgout id "M2-Frame" attr "fill" value if M2.idle : "#07BEB8" elif M2.broken : "
 svgout id "M2-Item" attr "display" value if M2.working : "inline" else "none" end;
 
 // Machine 3
+
 plant M3:
 
     location idle: marked; initial;

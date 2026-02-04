@@ -1,0 +1,18 @@
+from "lib:cif" import *;
+
+if not exists("generated"):
+    mkdir("generated");
+end
+
+cifdatasynth(
+    "plant/requirements.cif",
+    "-o generated/supervisor.cif",
+    "-n supervisor"
+);
+
+cifmerge(
+    "plant/plant.cif",
+    "generated/supervisor.cif",
+     "-o generated/controlled-system.cif"
+);
+

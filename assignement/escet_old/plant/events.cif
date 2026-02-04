@@ -1,0 +1,38 @@
+controllable event M1_start;
+uncontrollable event M1_finish_success;
+uncontrollable event M1_brokendown;
+
+controllable event M1_repaired;
+
+controllable event M2_start;
+uncontrollable event M2_finish_success;
+uncontrollable event M2_brokendown;
+
+controllable event M2_repaired;
+
+controllable event M3_start;
+uncontrollable event M3_finish_success;
+uncontrollable event M3_brokendown;
+
+controllable event M3_repaired;
+
+controllable event BRMoveUp;
+controllable event BRMoveDown;
+controllable event BRMoveLeft;
+controllable event BRMoveRight;
+
+controllable event BRTake0;
+controllable event BRTake1;
+controllable event BRTake2;
+controllable event BRTake3;
+
+controllable event BRDeliver3;
+
+controllable event BRCharge;
+
+controllable event ORMoveUp;
+controllable event ORMoveDown;
+controllable event ORMoveLeft;
+controllable event ORMoveRight;
+
+controllable event ORCharge;
