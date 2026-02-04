@@ -1,38 +1,32 @@
-controllable event M1_start;
-uncontrollable event M1_finish_success;
-uncontrollable event M1_brokendown;
+// ------------------------------ //
+//           Machines             //
+// ------------------------------ //
 
-controllable event M1_repaired;
+// Start
+controllable event M1_start, M2_start, M3_start;
 
-controllable event M2_start;
-uncontrollable event M2_finish_success;
-uncontrollable event M2_brokendown;
+// Successfully finished
+uncontrollable event M1_finish_success, M2_finish_success, M3_finish_success;
 
-controllable event M2_repaired;
+// Broken
+uncontrollable event M1_broken, M2_broken, M3_broken;
 
-controllable event M3_start;
-uncontrollable event M3_finish_success;
-uncontrollable event M3_brokendown;
+// Repair
+controllable event M1_repaired, M2_repaired, M3_repaired;
 
-controllable event M3_repaired;
+// ------------------------------ //
+//            Rover               //
+// ------------------------------ //
 
-controllable event BRMoveUp;
-controllable event BRMoveDown;
-controllable event BRMoveLeft;
-controllable event BRMoveRight;
+// Moves
+controllable event BR_move_up, BR_move_down, BR_move_left, BR_move_right;
+controllable event OR_move_up, OR_move_down, OR_move_left, OR_move_right;
 
-controllable event BRTake0;
-controllable event BRTake1;
-controllable event BRTake2;
-controllable event BRTake3;
+// Charge
+controllable event BR_charge, OR_charge;
 
-controllable event BRDeliver3;
+// Take Item
+controllable event BR_take_0, BR_take_1, BR_take_2, BR_take_3;
 
-controllable event BRCharge;
-
-controllable event ORMoveUp;
-controllable event ORMoveDown;
-controllable event ORMoveLeft;
-controllable event ORMoveRight;
-
-controllable event ORCharge;
+// Deliver
+controllable event BR_deliver_3;

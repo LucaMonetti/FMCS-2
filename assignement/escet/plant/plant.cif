@@ -1,3 +1,7 @@
+// ------------------------------ //
+//        Import Helpers          //
+// ------------------------------ //
+
 import "../constants.cif";
 import "../functions.cif";
 import "events.cif";
@@ -5,8 +9,11 @@ import "events.cif";
 // Svg file
 svgfile "plant.svg";
 
-// Machine 1
+// ------------------------------ //
+//           Machines             //
+// ------------------------------ //
 
+// Machine 1
 plant M1:
 
     location idle: marked; initial;
@@ -14,7 +21,7 @@ plant M1:
 
     location working:
         edge M1_finish_success goto idle;
-        edge M1_brokendown goto broken;
+        edge M1_broken goto broken;
 
     location broken:
         edge M1_repaired goto idle;
@@ -32,7 +39,7 @@ plant M2:
 
     location working:
         edge M2_finish_success goto idle;
-        edge M2_brokendown goto broken;
+        edge M2_broken goto broken;
 
     location broken:
         edge M2_repaired goto idle;
@@ -50,7 +57,7 @@ plant M3:
 
     location working:
         edge M3_finish_success goto idle;
-        edge M3_brokendown goto broken;
+        edge M3_broken goto broken;
 
     location broken:
         edge M3_repaired goto idle;
@@ -60,11 +67,15 @@ end
 svgout id "M3-Frame" attr "fill" value if M3.idle : "#07BEB8" elif M3.broken : "#D92020" else "#E8871E" end;
 svgout id "M3-Item" attr "display" value if M3.working : "inline" else "none" end;
 
+// ------------------------------ //
+//            Rovers              //
+// ------------------------------ //
+
 // Blue Rover
 plant BlueRover:
 
     disc int[1..6] x = 5;
-    disc int[1..4] y = 1;
+    disc int[1..4] y = 2;
 
     disc int[0..8] energy = 8;
 
@@ -74,19 +85,19 @@ plant BlueRover:
     disc int[0..2] wi3 = 0;
 
     location: marked; initial;
-        edge BRMoveUp when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1) do y := y + 1, energy := energy- 1;
-        edge BRMoveDown when y >= 2 and energy >= 1 and validMove(x, y - 1, energy - 1) do y := y - 1, energy := energy- 1;
-        edge BRMoveRight when x <= 5 and energy >= 1 and validMove(x + 1, y, energy - 1) do x := x + 1, energy := energy- 1;
-        edge BRMoveLeft when x >= 2 and energy >= 1 and validMove(x - 1, y, energy - 1) do x := x - 1, energy := energy- 1;
+        edge BR_move_up when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1) do y := y + 1, energy := energy- 1;
+        edge BR_move_down when y >= 2 and energy >= 1 and validMove(x, y - 1, energy - 1) do y := y - 1, energy := energy- 1;
+        edge BR_move_right when x <= 5 and energy >= 1 and validMove(x + 1, y, energy - 1) do x := x + 1, energy := energy- 1;
+        edge BR_move_left when x >= 2 and energy >= 1 and validMove(x - 1, y, energy - 1) do x := x - 1, energy := energy- 1;
 
-        edge BRTake0 when x = 1 and y = 4 and wi0 < 2 do wi0 := wi0 + 1;
-        edge BRTake1 when x = 3 and y = 3 and wi1 < 2 do wi1 := wi1 + 1;
-        edge BRTake2 when x = 5 and y = 2 and wi2 < 2 do wi2 := wi2 + 1;
-        edge BRTake3 when x = 1 and y = 1 and wi3 < 2 do wi3 := wi3 + 1;
+        edge BR_take_0 when x = Source_x and y = Source_y and wi0 < 2 do wi0 := wi0 + 1;
+        edge BR_take_1 when x = M1_x and y = M1_y and wi1 < 2 do wi1 := wi1 + 1;
+        edge BR_take_2 when x = M2_x and y = M2_y and wi2 < 2 do wi2 := wi2 + 1;
+        edge BR_take_3 when x = M3_x and y = M3_y and wi3 < 2 do wi3 := wi3 + 1;
 
-        edge BRCharge when (x = 4 and y = 1) or (x = 3 and y = 4) do energy := 8;
+        edge BR_charge when (x = Charger1_x and y = Charger1_y) or (x = Charger2_x and y = Charger2_y) do energy := 8;
 
-        edge BRDeliver3 when wi3 >= 1 and x= Target_x and y = Target_y do wi3 := wi3 - 1;
+        edge BR_deliver_3 when wi3 >= 1 and x= Target_x and y = Target_y do wi3 := wi3 - 1;
 
         edge M1_start when wi0 >= 1 and x = M1_x and y = M1_y do wi0 := wi0 - 1;
         edge M2_start when wi1 >= 1 and x = M2_x and y = M2_y do wi1 := wi1 - 1;
@@ -132,16 +143,16 @@ plant OrangeRover:
     disc int[0..8] energy = 8;
 
     location: marked; initial;
-        edge ORMoveUp when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1) do y := y + 1, energy := energy- 1;
-        edge ORMoveDown when y >= 2 and energy >= 1 and validMove(x, y - 1, energy - 1) do y := y - 1, energy := energy- 1;
-        edge ORMoveRight when x <= 5 and energy >= 1 and validMove(x + 1, y, energy - 1) do x := x + 1, energy := energy- 1;
-        edge ORMoveLeft when x >= 2 and energy >= 1 and validMove(x - 1, y, energy - 1) do x := x - 1, energy := energy- 1;
+        edge OR_move_up when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1) do y := y + 1, energy := energy- 1;
+        edge OR_move_down when y >= 2 and energy >= 1 and validMove(x, y - 1, energy - 1) do y := y - 1, energy := energy- 1;
+        edge OR_move_right when x <= 5 and energy >= 1 and validMove(x + 1, y, energy - 1) do x := x + 1, energy := energy- 1;
+        edge OR_move_left when x >= 2 and energy >= 1 and validMove(x - 1, y, energy - 1) do x := x - 1, energy := energy- 1;
 
-        edge ORCharge when (x = 4 and y = 1) or (x = 3 and y = 4) do energy := 8;
+        edge OR_charge when (x = Charger1_x and y = Charger1_y) or (x = Charger2_x and y = Charger2_y) do energy := 8;
 
-        edge M1_repaired when x = 3 and y = 3;
-        edge M2_repaired when x = 5 and y = 2;
-        edge M3_repaired when x = 1 and y = 1;
+        edge M1_repaired when x = M1_x and y = M1_y;
+        edge M2_repaired when x = M2_x and y = M2_y;
+        edge M3_repaired when x = M3_x and y = M3_y;
 
 end
 
@@ -158,9 +169,11 @@ svgout id "OR-L7" attr "display" value if OrangeRover.energy >= 7 : "inline" els
 svgout id "OR-L8" attr "display" value if OrangeRover.energy = 8 : "inline" else "none" end;
 
 // Update Position
-
 svgout id "O-Rover" attr "transform" value fmt("translate(%d, %d)", 92 + 207 * (OrangeRover.x - 1), 144 + 207 * (4 - OrangeRover.y));
 
+// ------------------------------ //
+//            Depots              //
+// ------------------------------ //
 
 // Depot 1
 plant D1:
@@ -169,7 +182,7 @@ plant D1:
 
     location : marked; initial;
         edge M1_finish_success when quantity < 2 do quantity := quantity + 1;
-        edge BRTake1 when quantity > 0 do quantity := quantity - 1;
+        edge BR_take_1 when quantity > 0 do quantity := quantity - 1;
 
 end
 
@@ -183,7 +196,7 @@ plant D2:
 
     location : marked; initial;
         edge M2_finish_success when quantity < 2 do quantity := quantity + 1;
-        edge BRTake2 when quantity > 0 do quantity := quantity - 1;
+        edge BR_take_2 when quantity > 0 do quantity := quantity - 1;
 
 end
 
@@ -197,7 +210,7 @@ plant D3:
 
     location : marked; initial;
         edge M3_finish_success when quantity < 2 do quantity := quantity + 1;
-        edge BRTake3 when quantity > 0 do quantity := quantity - 1;
+        edge BR_take_3 when quantity > 0 do quantity := quantity - 1;
 
 end
 
