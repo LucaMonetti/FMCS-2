@@ -105,12 +105,10 @@ plant BlueRover:
 end
 
 // Update position
-
 svgout id "BR-X-Pos" text value BlueRover.x;
 svgout id "BR-Y-Pos" text value BlueRover.y;
 
 // Update Energy
-
 svgout id "BR-L1" attr "display" value if BlueRover.energy >= 1 : "inline" else "none" end;
 svgout id "BR-L2" attr "display" value if BlueRover.energy >= 2 : "inline" else "none" end;
 svgout id "BR-L3" attr "display" value if BlueRover.energy >= 3 : "inline" else "none" end;
@@ -120,7 +118,16 @@ svgout id "BR-L6" attr "display" value if BlueRover.energy >= 6 : "inline" else 
 svgout id "BR-L7" attr "display" value if BlueRover.energy >= 7 : "inline" else "none" end;
 svgout id "BR-L8" attr "display" value if BlueRover.energy = 8 : "inline" else "none" end;
 
+// Update carry count
+svgout id "BR-0-Label" text value BlueRover.wi0;
+svgout id "BR-1-Label" text value BlueRover.wi1;
+svgout id "BR-2-Label" text value BlueRover.wi2;
+svgout id "BR-3-Label" text value BlueRover.wi3;
+
 // Update Carry
+svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
+svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
+svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
 svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
 svgout id "Item-01" attr "display" value if BlueRover.wi0 = 2 : "inline" else "none" end;
 svgout id "Item-10" attr "display" value if BlueRover.wi1 >= 1 : "inline" else "none" end;
