@@ -1,9 +1,0 @@
-import "plant.cif";
-
-// Req 1
-
-requirement R3:
-    location: initial; marked;
-        edge BRTake0, BRTake1, BRTake2, BRTake3 when BlueRover.wi0 + BlueRover.wi1 + BlueRover.wi2 + BlueRover.wi3 <= 4; 
-
-end
