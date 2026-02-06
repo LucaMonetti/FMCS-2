@@ -126,9 +126,6 @@ svgout id "BR-3-Label" text value BlueRover.wi3;
 
 // Update Carry
 svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
-svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
-svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
-svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
 svgout id "Item-01" attr "display" value if BlueRover.wi0 = 2 : "inline" else "none" end;
 svgout id "Item-10" attr "display" value if BlueRover.wi1 >= 1 : "inline" else "none" end;
 svgout id "Item-11" attr "display" value if BlueRover.wi1 = 2 : "inline" else "none" end;
@@ -178,6 +175,7 @@ svgout id "OR-L8" attr "display" value if OrangeRover.energy = 8 : "inline" else
 // Update Position
 svgout id "O-Rover" attr "transform" value fmt("translate(%d, %d)", 92 + 207 * (OrangeRover.x - 1), 144 + 207 * (4 - OrangeRover.y));
 
+
 // ------------------------------ //
 //            Depots              //
 // ------------------------------ //
@@ -188,7 +186,7 @@ plant D1:
     disc int[0..2] quantity = 0;
 
     location : marked; initial;
-        edge M1_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge M1_finish_success do quantity := quantity + 1;
         edge BR_take_1 when quantity > 0 do quantity := quantity - 1;
 
 end
@@ -202,7 +200,7 @@ plant D2:
     disc int[0..2] quantity = 0;
 
     location : marked; initial;
-        edge M2_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge M2_finish_success do quantity := quantity + 1;
         edge BR_take_2 when quantity > 0 do quantity := quantity - 1;
 
 end
@@ -216,7 +214,7 @@ plant D3:
     disc int[0..2] quantity = 0;
 
     location : marked; initial;
-        edge M3_finish_success when quantity < 2 do quantity := quantity + 1;
+        edge M3_finish_success do quantity := quantity + 1;
         edge BR_take_3 when quantity > 0 do quantity := quantity - 1;
 
 end

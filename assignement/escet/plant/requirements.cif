@@ -1,6 +1,11 @@
 import "plant.cif";
 import "events.cif";
 
+
+requirement invariant M1_safety: M1_start needs D1.quantity < 2;
+requirement invariant M2_safety: M2_start needs D2.quantity < 2;
+requirement invariant M3_safety: M3_start needs D3.quantity < 2;
+
 // ---------------------------------------------------------------------- //
 //  Requirement 2: The sum of energy of the two batteries is always >= 1  //
 // ---------------------------------------------------------------------- //
