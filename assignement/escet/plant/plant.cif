@@ -118,7 +118,7 @@ svgout id "BR-L6" attr "display" value if BlueRover.energy >= 6 : "inline" else 
 svgout id "BR-L7" attr "display" value if BlueRover.energy >= 7 : "inline" else "none" end;
 svgout id "BR-L8" attr "display" value if BlueRover.energy = 8 : "inline" else "none" end;
 
-// Update carry count
+// Update dashboard carried items
 svgout id "BR-0-Label" text value BlueRover.wi0;
 svgout id "BR-1-Label" text value BlueRover.wi1;
 svgout id "BR-2-Label" text value BlueRover.wi2;
@@ -134,8 +134,7 @@ svgout id "Item-21" attr "display" value if BlueRover.wi2 = 2 : "inline" else "n
 svgout id "Item-30" attr "display" value if BlueRover.wi3 >= 1 : "inline" else "none" end;
 svgout id "Item-31" attr "display" value if BlueRover.wi3 = 2 : "inline" else "none" end;
 
-// Update Position
-
+// Update actual position
 svgout id "B-Rover" attr "transform" value fmt("translate(%d, %d)", 52 + 207 * (BlueRover.x - 1), 135 + 207 * (4 - BlueRover.y));
 
 // Orange Rover
@@ -159,10 +158,11 @@ plant OrangeRover:
         edge M3_repaired when x = M3_x and y = M3_y;
 
 end
-
+// Update position
 svgout id "OR-X-Pos" text value OrangeRover.x;
 svgout id "OR-Y-Pos" text value OrangeRover.y;
 
+// Update Energy
 svgout id "OR-L1" attr "display" value if OrangeRover.energy >= 1 : "inline" else "none" end;
 svgout id "OR-L2" attr "display" value if OrangeRover.energy >= 2 : "inline" else "none" end;
 svgout id "OR-L3" attr "display" value if OrangeRover.energy >= 3 : "inline" else "none" end;
@@ -172,7 +172,7 @@ svgout id "OR-L6" attr "display" value if OrangeRover.energy >= 6 : "inline" els
 svgout id "OR-L7" attr "display" value if OrangeRover.energy >= 7 : "inline" else "none" end;
 svgout id "OR-L8" attr "display" value if OrangeRover.energy = 8 : "inline" else "none" end;
 
-// Update Position
+// Update actual position
 svgout id "O-Rover" attr "transform" value fmt("translate(%d, %d)", 92 + 207 * (OrangeRover.x - 1), 144 + 207 * (4 - OrangeRover.y));
 
 
