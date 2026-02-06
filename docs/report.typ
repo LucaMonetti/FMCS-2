@@ -82,74 +82,132 @@
 
 = Introduction and objectives
 
-The primary objective of the second assignement is the design and implementation of a supervisory control system for a virtual production plant using the Eclipse ESCET toolset with the CIF modeling language. The plant is composed by 3 machines, 3 depots and two rover that moves inside the plant. The role of each component will be described in the next sections.
+The primary objective of this second assignment is the design and implementation of a Supervisory Control System for a virtual production plant utilizing the Eclipse ESCET toolset with the CIF modeling language.
+
+The system simulates a factory environment consisting of three machines, three depots and two rovers with logistical and maintenance operations. The project aims to synthesize a controller that guarantees the correct behavior of the system.
+
+The roles and configurations of each entity will be described in the _Plant architecture_ section.
 
 == Structure of the report
 
-The present report documents the design and implementation process of the supervisory control system.
+The present report documents the design and implementation process of the Supervisory Control System.
 
 The report is structured as follows:
-- In Section 2 the architecture of the plant is described, detailing the role of each component.
-- In Section 3 the graphic interface of the plant is illustrated
-- In Section 4 the requirements of the plant are listed and explained.
-- In Section 5 the tooldef file is explained.
-- Finally, in Section 6 some conclusions are drawn.
+- *Section 2: Plant architecture*: Contains a description of all the physical entities.
+- *Section 3: Graphical interface*: Illustration of the visual interface of the plant.
+- *Section 4: Control Requirements*: Formalization of the six control policies with an explanation of the actual implementation.
+- *Section 5: ToolDef*: Explanation of the automated script used to synthesize the supervisor and the controlled-system.
 
-= Plant Architecture
+= Plant architecture
 
 Each component of the plant has a specific role in the production process:
-- *Machines*: There are three machines (M1, M2, M3) responsible for processing raw materials into finished products.
-- *Depots*: The plant includes three depots (D1, D2, D3) for storing the workitems.
-- *Rovers*: Two rovers (BR, OR) can freely move within the plant using a battery consumed on each movement. The BR can carry 2 workitem of each type and move them within the machines. The OR can repair the machines when they break down.
+
+- *Machines*: There are three machines ($M_1$, $M_2$, $M_3$) designed for processing raw materials into finished products. They need to take input from the Blue Rover and deposit the finished workpiece into the corresponding Depot. If a failure occurs during operation, the machine breaks and halts until repaired.
+- *Depots*: The plant includes three depots ($D_1$, $D_2$, $D_3$) for storing the workitems located in the same cell of the corresponding machine.
+- *Rovers*: Two rovers ($text("BR")$, $text("OR")$) that can freely move within the plant. Each movement consumes battery power. The Blue Robot is a logistical unit, capable of carrying two workitems of each type and transferring them between the machines. The Orange Robot is a maintenance unit, responsible for repairing the machines when they break down.
 
 == Machine modeling
-Each machine is modeled as a state machine with three states that represent its operational status:
+
+The machines ($M_1$, $M_2$, $M_3$) are the main processing units of the system. Each unit receives a workpiece from the _Blue Rover_, executes a transformation process and either outputs the result to the corresponding _Depot_ or breaks down and halts until it is repaired by the _Orange Rover_.
+
+
+
+Each machine is modeled as a finite automaton with the following states:
+
 - *Idle*: The machine is ready to process workitems. This is the initial and marked state.
-- *Working*: The machine is processing the workitem after the `MX_start` events. From this state, the machine can either complete the processing and return to the *Idle* state upon the `M1_finish_success` event or transition to the *Broken* state if the `MX_broken` event occurs.
-- *Broken*: The machine is out of order and needs to be repaired. The machine remains locked until the `MX_repaired` event occurs, which is synchronized with the Orange Rover's presence at the machine coordinates.
+- *Working*: The machine has received a workitem and is processing it.
+- *Broken*: The machine is out of order and needs the presence of the _Orange Rover_ to perform a repair.
+
+The possible events are categorized by their controllability:
+
+- *Controllable Events*:
+  - `Mx_start`
+  - `Mx_repaired`
+- *Uncontrollable Events*:
+  - `Mx_finish_success`
+  - `Mx_broken`
 
 == Depot modeling
-Each depot is modeled as an extended state machine with a discrete variable `disc int[0..2] quantity` that tracks the number of workitems stored in the depot.
+The depots ($D_1$, $D_2$, $D_3$) are the storage of the system, acting as intermediate buffers between the machines and the final target.
 
-All the transition start from the same initial and marked state. Each depot increments the `quantity` variable upon the corresponding `MX_finish_success` events and decremnents it upon the `BR_take_X` events, ensuring that the depot's capacity constraints are respected.
+Each depot is modeled as an extended state machine that utilizes a discrete integer variable to manage its internal state:
+- `disc int[0..2] quantity`: Tracks the number of workitems stored within the depot.
+
+The automaton consists of a single initial and marked state and it is synchronized with the corresponding machine and the Blue Rover. The `quantity` variable is updated as follows:
+- *Increment*: The `quantity` increases when is less than two and the machine completes a processing.
+- *Decrement*: The `quantity` decreases when is greather than zero and the Blue Rover picks up a workpiece.
+
+The possible events are categorized by their controllability:
+
+- *Controllable Events*:
+  - `BR_take_x`
+- *Uncontrollable Events*:
+  - `Mx_finish_success`
+
+Where $x in [1, 3]$.
 
 == Rovers modeling
-The rovers are modeled as extended state machines with 3 discrete variables:
+The rovers ($text("BR")$, $text("OR")$) share the navigation and energy functionalities but also have a different specif role:
+- The _Blue Rover_ manages workitems logistics
+- The _Orange Rover_ handles the system maintenance.
+
+Both rovers are modeled as extended state machines whose internal state is defined by three discrete variables:
 - `disc int[0..8] energy`: Represents the rover's battery level, which decreases with each movement and can be recharged at the Charging Stations.
 - `disc int[1..6] x`: Represents the rover's current x-coordinate within the plant.
 - `disc int[1..4] y`: Represents the rover's current y-coordinate within the plant.
 
-Each rover can move in four directions (up, down, left, right) using the corresponding movement events:
-- `XR_move_up`
-- `XR_move_down`
-- `XR_move_left`
-- `XR_move_right`
+The automaton consist of a single initial and marked state and each variable is modified according to specific rules:
+- *Directional movement*: Each rover can move between cells using directional events. Each event check if the reached cell is inside the boundaries, there is enough energy left and the move is _valid_ (explained on _Requirement Formalization_ section).
+- *Charging*: Each rover can charge when is positioned at one of the two Charging station, this action resets the rover's energy to its maximum capacity.
 
-The rovers can only move if they have sufficient energy and are within the plant's boundaries.
+The possible events are categorized by their controllability:
 
-To charge the rover's battery, the `XR_charge` event is used when the rover is at one of the two Charging Stations available. This event resets the `energy` variable to its maximum value of 8.
+- *Controllable Events*:
+  - `[col]R_move_up`
+  - `[col]R_move_down`
+  - `[col]R_move_left`
+  - `[col]R_move_right`
+  - `[col]R_charge`
+
+Where `[col]` can be either `O` or `B`.
 
 === Blue Rover (BR)
 The Blue Rover (BR) is responsible for transporting workitems between depots and machines. It can carry up to 2 workitems of each type.
 
-This rover can pick up workitems from depots and the source using the `BR_take_X` events, the rover can only pick up a workitem from the same cell if the depot has available items and the rover has enough capacity.
-
-This model is characterized by 4 discrete variable that track the number of workitems of each type currently carried by the rover:
+This model is characterized by 4 discrete variable that tracks the number of workitems of each type currently carried by the rover:
 - `disc int[0..2] wi0`: Number of workitems of type 0 carried by the rover
 - `disc int[0..2] wi1`: Number of workitems of type 1 carried by the rover.
 - `disc int[0..2] wi2`: Number of workitems of type
 - `disc int[0..2] wi3`: Number of workitems of type 3 carried by the rover.
 
-This rover is needed to be on the same cell fom the machine to start processing a workitem using the event `MX_start`.
 
-The rover can deliver finished workitems to the target using the `BR_deliver_3` events when it is on the same cell.
+
+The automaton is synchronized with each machine model. Each workitems variable is updated as follows:
+- *Increment*: The variable `wix` where $x in [0, 3]$ increase when the rover take a workpiece from a depots or the source. The rover must be in the same cell.
+- *Decrement*: The variable `wix` where $x in [0, 3]$ decrease when a machine start its processing or the rover deliver the final product to the target. The rover must be in the same cell.
+
+It has eight additional controllable events:
+
+- *Controllable Events*:
+  - `BR_take_x`
+  - `BR_deliver_3`
+  - `My_start`
+
+Where $x in [0, 3]$ and $y in [1, 3]$.
 
 === Orange Rover (OR)
-The Orange Rover (OR) is responsible for repairing broken machines. It can only repair a machine when it is at the same coordinates as the machine with the `MX_repaired` event.
+The Orange Rover (OR) is responsible for repairing broken machines. Must reach the broken machine to repair it, allowing the production to resume.
+
+It has three additional events:
+
+- *Controllable event*:
+  - `Mx_repair`
+
+Where $x in [1, 3]$.
 
 = Graphic Interface
 
-This project contains a dynamic graphical interface that allows the user to visualize the state of the plant during the simulation.
+To facilitate the supervision of the plant the project includes a dynamic interface that provides a visual representation of the rovers states.
 
 #image("figures/plant.svg", width: 100%)
 
@@ -177,77 +235,83 @@ Each depot represent the number of workitems stored using small icons inside the
 
 #align(center, image("figures/blue_rover.svg", height: 60pt))
 
-The Blue Rover is represented by a blue rover icon that moves within the plant according to its coordinates using the following code:
+The Blue Rover is represented by a blue rover icon that moves within the plant. The actual positioning of the rover within the SVG interface is achieved thought a dynamic coordinate transformation using the following translation formula:
 
 ```python
 svgout id "B-Rover" attr "transform" value
   fmt("translate(%d, %d)", 52 + 207 * (BlueRover.x - 1), 135 + 207 * (4 - BlueRover.y))
 ```
 
-All the _magic number_ present are used to correctly position the rover inside the plant grid.
+The parameters used are some calibration constants to align the model with the visual grid.
 
-Also all the workitems currently carried by the rover are represented by small icons on top of the rover icon, with a maximum of 2 icons for each type of workitem.
+To provide a clear indication of the rover's actual payload the interface utilizes conditional visibility for each workitem icons:
+
+```java
+svgout id "Item-00" attr "display" value if BlueRover.wi0 >= 1 : "inline" else "none" end;
+svgout id "Item-01" attr "display" value if BlueRover.wi0 = 2 : "inline" else "none" end;
+```
 
 == Orange Rover
 
 #align(center, image("figures/orange_rover.svg", height: 60pt))
 
-The Orange Rover is represented by an orange rover icon that moves within the plant according to its coordinates using the same code used for the Blue Rover, but with different magic numbers to correctly position the rover inside the plant grid.
+The Orange Rover is represented by an orange rover icon that moves within the plant according to its coordinates following the same logic of the Blue Rover.
+
+```java
+svgout id "O-Rover" attr "transform" value
+  fmt("translate(%d, %d)", 92 + 207 * (OrangeRover.x - 1), 144 + 207 * (4 - OrangeRover.y));
+```
 
 == Charging Stations
 
 #align(center, image("figures/charging-station.svg", height: 60pt))
 
-The Charging Stations are represented by a gray charging station icon. They have no real state and are only used as reference points for the rovers to recharge their batteries.
+The Charging Stations are represented by a gray charging station icon located at fixed coordinates within the grid. They have no real state and are used only as reference points for the rovers to recharge their batteries.
 
-== Rover User Interface
+== Rover status dashboard
 
 #align(center, image("figures/rovers_ui.svg", width: 60%))
 
-The user interface for the rovers is displayed in the right side of the plant and shows important information about the rovers' status:
+On the right side of the interface is located a status dashboard that gets dynamically updated to show the rovers' internal state.
+
+Taking the _Blue Rover_ as an example:
 - *Energy Level*: A simple battery that indicates the current energy level of the rover, with a maximum value of 8.
+  ```java
+  // Energy Update
+  svgout id "BR-L1" attr "display" value if BlueRover.energy >= 1 : "inline" else "none" end;
+  svgout id "BR-L2" attr "display" value if BlueRover.energy >= 2 : "inline" else "none" end;
+  ...
+  svgout id "BR-L8" attr "display" value if BlueRover.energy = 8 : "inline" else "none" end;
+  ```
+
 - *Position*: The current coordinates of the rover within the plant grid.
+  ```java
+  // Position Update
+  svgout id "BR-X-Pos" text value BlueRover.x;
+  svgout id "BR-Y-Pos" text value BlueRover.y;
+  ```
+
 - *Carried Workitems*: A visual representation of the workitems currently carried by the Blue Rover, with a maximum of 2 icons for each type of workitem.
-
-The user interface is dynamically updated based on the current state of the rovers, providing real-time feedback to the user during the simulation using the following code:
-
-```java
-// Position Update
-svgout id "BR-X-Pos" text value BlueRover.x;
-svgout id "BR-Y-Pos" text value BlueRover.y;
-
-// Energy Update
-svgout id "BR-L1" attr "display" value if BlueRover.energy >= 1 : "inline" else "none" end;
-svgout id "BR-L2" attr "display" value if BlueRover.energy >= 2 : "inline" else "none" end;
-...
-svgout id "BR-L8" attr "display" value if BlueRover.energy = 8 : "inline" else "none" end;
-
-// Workitems Update
-svgout id "BR-0-Label" text value BlueRover.wi0;
-...
-svgout id "BR-3-Label" text value BlueRover.wi3;
-```
+  ```java
+  // Workitems Update
+  svgout id "BR-0-Label" text value BlueRover.wi0;
+  ...
+  svgout id "BR-3-Label" text value BlueRover.wi3;
+  ```
 
 = Requirements
 
-In this section are listed and explained the control policies that the supervisory controller must enforce to ensure the correct behavior of the plant.
+In this section all the control policies that the supervisory controller must enforce to ensure the correct behavior of the plant are explained and fomalized.
 
 == Requirement 1
 #align(center, emph(text(gray, "\"No rover runs out of battery on tiles that are not charging stations\"")))
 
 Battery preservation is a critical requirement for the rovers operating within the plant. If a rover depletes its battery while on a tile that is not a charging station, it would become immobilized. For this reason this control policy is enforced at plant level.
 
-Let's consider the _up movement_ of the Blue Rover as an example.
+Before moving the rover needs to know if it will be able to reach a Chargin Station from that cell with its remaining energy. This can be done by checking if the Manhattan distance from at least one of the two charging stations after the move is less than or equal to the remaining energy.
 
 ```java
-edge BR_move_up
-  when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1)
-  do y := y + 1, energy := energy- 1;
-```
-
-Looking at the guard the movement is only allowed not oly if the rover stays within the plant boundaries (`y <= 3`) and has enough energy to perform the movement (`energy >= 1`), but also if the resulting position after the movement is valid using the `validMove`. This function simply check it the Manhattan distance from at least one of the two charging stations after the move is less than or equal to the remaining energy. The implementation is listed below and can be found on the `functions.cif` file.
-
-```java
+// functions.cif
 func int[0..10] distance(int[0..7] x1; int[0..5] y1; int[1..6] x2; int[1..4] y2):
     return abs(x1 - x2) + abs(y1 - y2);
 end
@@ -257,12 +321,17 @@ func bool validMove(int[0..7] x; int[0..5] y; int[-1..7] energy):
       distance(x, y, Charger1_x, Charger1_y) <= energy or
       distance(x, y, Charger2_x, Charger2_y) <= energy;
 end
+
+// Example of usage
+edge BR_move_up
+  when y <= 3 and energy >= 1 and validMove(x, y + 1, energy - 1)
+  do y := y + 1, energy := energy- 1;
 ```
 
 == Requirement 2
 #align(center, emph(text(gray, "\"The sums of the units of energy of the two batteries is always >= 1\"")))
 
-At any moment the combined energy levels of the two rovers must be at least 1 unit. In order to prevent a situation where both rovers are completely out of energy, should check the resulting sum of their energy levels before allowing any movement.
+At any moment the combined energy levels of the two rovers must be at least 1 unit. In order to prevent a situation where both rovers are completely out of energy, the supervisor checks the resulting sum of their energy levels before allowing any move.
 
 ```java
 requirement R2:
@@ -275,10 +344,12 @@ end
 
 The guard `BlueRover.energy + OrangeRover.energy - 1 >= 1` ensures that *after* any movement event, the total energy of both rovers remains at least 1 unit.
 
+In combination with the previous requirement we know that the rover with energy level zero will be exactly on one of the two Charging Stations.
+
 == Requirement 3
 #align(center, emph(text(gray, "\"The maximum number of workpieces that the blue rover can carry is 4\"")))
 
-At any moment the Blue Rover can carry at most 4 workitems in total, regardless of their type. This control policy is enforced using a requirement that checks the sum of all workitems currently carried by the rover before allowing it to pick up another workitem from a depot.
+At any moment the Blue Rover can carry at most 4 workitems in total, regardless of their type. This control policy is enforced using a requirement that checks the sum of all workitems currently carried by the rover before allowing any `take` event.
 
 ```java
 requirement R3:
@@ -291,7 +362,7 @@ end
 == Requirement 4
 #align(center, emph(text(gray, "\"Each rover can charge provided its battery is not already full\"")))
 
-To prevent unnecessary charging actions, each rover is allawed to charge only whel its battery is not already full. This control policy is enforced using a requirement invariant that checks the current energy level of the rover before allowing it to perform the charging action.
+To prevent unnecessary charging actions, each rover is allowed to charge only when its battery is not already full. This control policy is enforced using a requirement invariant that checks the current energy level of the rover before allowing it to perform the charging action.
 
 ```java
 requirement invariant R4A: BR_charge needs BlueRover.energy < 8;
@@ -301,7 +372,7 @@ requirement invariant R4B: OR_charge needs OrangeRover.energy < 8;
 == Requirement 5
 #align(center, emph(text(gray, "\"Rovers do not collide\"")))
 
-Two rovers must never occupy the same position within the plant at the same time. This control policy is enforced using a requirement that checks if the two rovers are on adiacent tiles, if so the movement that would cause a collision is prevented.
+Two rovers must never occupy the same position within the plant at the same time. This control policy is enforced using a requirement that checks if the two rovers are on adjacent tiles, if so the movement that would cause a collision is prevented.
 
 ```java
 requirement R5:
@@ -327,7 +398,7 @@ end
 == Requirement 6
 #align(center, emph(text(gray, "\"If D3 is full, then D1 can store at most one workpiece\"")))
 
-If Depot D3 contains 2 workpieces, then Depot D1 is only allowed to store at most one workitem. This control policy is enforced using a requirement invariant that checks the quantity of workitems in both depots before allowing Machine M1 to start another process. This is necessary since `M1_start` event is controllable while the `M3_finish_success` event is uncontrollable.
+If Depot D3 contains 2 workpieces, then Depot D1 is only allowed to store at most one workitem. This control policy is enforced using a requirement invariant that checks the quantity of workitems in both depots before allowing Machine M1 to start another process. This is necessary since the `M1_start` event is controllable while the `M1_finish_success` event is uncontrollable.
 
 ```java
 requirement invariant R6: M1_start needs D1.quantity < 1 or D3.quantity < 2;
@@ -337,9 +408,9 @@ requirement invariant R6: M1_start needs D1.quantity < 1 or D3.quantity < 2;
 
 The final stage of the project involved the automation of the supervisor generation process using a `tooldef` file that specifies the necessary configurations.
 
-The `tooldef` file is really simple and is composed by three main section:
+The `tooldef` file is structured into three main section:
 
-1. *Enviroment Checking*: If the `generated` directory does not exist, it is created to store the generated CIF files.
+1. *Environment preparation*: If the `generated` directory does not exist, it is created to store the generated CIF files.
 2. *Supervisor Synthesis*: The `cifdatasynth` command is used to generate the supervisor based on the plant requirements specified in the `plant/requirements.cif` file. The output is saved in the `generated/supervisor.cif` file.
 3. *Plant Merging*: The `cifmerge` command is used to combine the original plant model with the synthesized supervisor, resulting in a controlled system saved in the `generated/controlled-system.cif` file.
 
@@ -362,5 +433,3 @@ cifmerge(
      "-o generated/controlled-system.cif"
 );
 ```
-
-= Conclusions
