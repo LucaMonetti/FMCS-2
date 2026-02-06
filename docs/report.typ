@@ -110,8 +110,6 @@ Each component of the plant has a specific role in the production process:
 
 The machines ($M_1$, $M_2$, $M_3$) are the main processing units of the system. Each unit receives a workpiece from the _Blue Rover_, executes a transformation process and either outputs the result to the corresponding _Depot_ or breaks down and halts until it is repaired by the _Orange Rover_.
 
-
-
 Each machine is modeled as a finite automaton with the following states:
 
 - *Idle*: The machine is ready to process workitems. This is the initial and marked state.
@@ -127,6 +125,8 @@ The possible events are categorized by their controllability:
   - `Mx_finish_success`
   - `Mx_broken`
 
+To address the fact that the machine process completion is an uncontrollable event, a control requirement has been added to prevents a machine from starting a new process if its destination depot has reached maximum capacity. The implementation is described in the _Requirement_ section.
+
 == Depot modeling
 The depots ($D_1$, $D_2$, $D_3$) are the storage of the system, acting as intermediate buffers between the machines and the final target.
 
@@ -134,7 +134,7 @@ Each depot is modeled as an extended state machine that utilizes a discrete inte
 - `disc int[0..2] quantity`: Tracks the number of workitems stored within the depot.
 
 The automaton consists of a single initial and marked state and it is synchronized with the corresponding machine and the Blue Rover. The `quantity` variable is updated as follows:
-- *Increment*: The `quantity` increases when is less than two and the machine completes a processing.
+- *Increment*: The `quantity` increases when the machine completes a processing.
 - *Decrement*: The `quantity` decreases when is greather than zero and the Blue Rover picks up a workpiece.
 
 The possible events are categorized by their controllability:
@@ -179,8 +179,6 @@ This model is characterized by 4 discrete variable that tracks the number of wor
 - `disc int[0..2] wi1`: Number of workitems of type 1 carried by the rover.
 - `disc int[0..2] wi2`: Number of workitems of type
 - `disc int[0..2] wi3`: Number of workitems of type 3 carried by the rover.
-
-
 
 The automaton is synchronized with each machine model. Each workitems variable is updated as follows:
 - *Increment*: The variable `wix` where $x in [0, 3]$ increase when the rover take a workpiece from a depots or the source. The rover must be in the same cell.
@@ -402,6 +400,16 @@ If Depot D3 contains 2 workpieces, then Depot D1 is only allowed to store at mos
 
 ```java
 requirement invariant R6: M1_start needs D1.quantity < 1 or D3.quantity < 2;
+```
+
+== Other requirement
+
+The system must account for the uncontrollability of the `Mx_finish_success` event. Since the supervisor cannot stop a machine from finishing a process once it has begun the invariant is applied to the `Mx_start` event.
+
+```java
+requirement invariant M1_safety: M1_start needs D1.quantity < 2;
+requirement invariant M2_safety: M2_start needs D2.quantity < 2;
+requirement invariant M3_safety: M3_start needs D3.quantity < 2;
 ```
 
 = Tooldef
